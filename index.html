@@ -435,6 +435,24 @@
             padding: 12px;
             border-radius: 12px;
         }
+
+        /* Blur background when modal is active */
+        .game-container.modal-active {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        .game-container.modal-active .quiz-modal,
+        .game-container.modal-active .continue-modal {
+            filter: none;
+            pointer-events: auto;
+        }
+
+        /* Disable canvas interactions when modal is active */
+        .game-canvas.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -806,7 +824,7 @@
         }
 
         function dropBlock() {
-            if (!gameState.currentBlock || gameState.isGameOver || gameState.quizActive) return;
+            if (!gameState.currentBlock || gameState.isGameOver || gameState.quizActive || gameState.continueActive) return;
             
             const currentBlock = gameState.currentBlock;
             const lastBlock = gameState.blocks[gameState.blocks.length - 1];
@@ -933,6 +951,10 @@
             gameState.continueActive = true;
             gameState.continueTimer = 10;
             
+            // Add blur effect and disable controls
+            document.querySelector('.game-container').classList.add('modal-active');
+            canvas.classList.add('disabled');
+            
             const randomQuestion = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
             
             document.getElementById('continueQuestion').textContent = randomQuestion.question;
@@ -955,12 +977,12 @@
 
         function startContinueTimer() {
             const timerElement = document.getElementById('continueTimer');
-            const timer = setInterval(() => {
+            window.continueTimerInterval = setInterval(() => {
                 gameState.continueTimer--;
                 timerElement.textContent = gameState.continueTimer + 's';
                 
                 if (gameState.continueTimer <= 0) {
-                    clearInterval(timer);
+                    clearInterval(window.continueTimerInterval);
                     // Time's up - final game over
                     answerContinue(-1, null);
                 }
@@ -1004,6 +1026,11 @@
                 
                 setTimeout(() => {
                     document.getElementById('continueModal').style.display = 'none';
+                    
+                    // Remove blur effect and re-enable controls
+                    document.querySelector('.game-container').classList.remove('modal-active');
+                    canvas.classList.remove('disabled');
+                    
                     createNewBlock();
                     updateProtocol();
                 }, 2000);
@@ -1028,6 +1055,11 @@
                 
                 setTimeout(() => {
                     document.getElementById('continueModal').style.display = 'none';
+                    
+                    // Remove blur effect and re-enable controls
+                    document.querySelector('.game-container').classList.remove('modal-active');
+                    canvas.classList.remove('disabled');
+                    
                     finalGameOver();
                 }, 2000);
             }
@@ -1041,10 +1073,49 @@
         }
 
         function restartGame() {
+            // Hide all modals
             gameOverElement.style.display = 'none';
-            weatherEffect.className = 'weather-effect';
             document.getElementById('quizModal').style.display = 'none';
+            document.getElementById('continueModal').style.display = 'none';
+            
+            // Remove modal active class and canvas disabled class
+            document.querySelector('.game-container').classList.remove('modal-active');
+            canvas.classList.remove('disabled');
+            
+            // Reset weather effects
+            weatherEffect.className = 'weather-effect';
+            
+            // Clear any active timers
+            if (window.quizTimerInterval) {
+                clearInterval(window.quizTimerInterval);
+            }
+            if (window.continueTimerInterval) {
+                clearInterval(window.continueTimerInterval);
+            }
+            
+            // Reset game state completely
+            gameState = {
+                isGameOver: false,
+                score: 0,
+                blocks: [],
+                currentBlock: null,
+                speed: 2,
+                blockHeight: 30,
+                baseWidth: 100,
+                environmentalEffects: false,
+                weatherActive: false,
+                quizActive: false,
+                quizTimer: 10,
+                lastQuizLevel: 0,
+                nextQuizTrigger: 3 + Math.floor(Math.random() * 4),
+                fallingPieces: [],
+                continueActive: false,
+                continueTimer: 10
+            };
+            
+            // Restart the game loop
             initGame();
+            gameLoop();
         }
 
         function startQuiz() {
@@ -1054,6 +1125,10 @@
             gameState.lastQuizLevel = gameState.blocks.length;
             gameState.nextQuizTrigger = gameState.blocks.length + 3 + Math.floor(Math.random() * 4); // Next quiz in 3-6 blocks
             gameState.quizTimer = 10;
+            
+            // Add blur effect and disable controls
+            document.querySelector('.game-container').classList.add('modal-active');
+            canvas.classList.add('disabled');
             
             showCatMessage("Quiz time! 🤔");
             
@@ -1079,12 +1154,12 @@
 
         function startQuizTimer() {
             const timerElement = document.getElementById('quizTimer');
-            const timer = setInterval(() => {
+            window.quizTimerInterval = setInterval(() => {
                 gameState.quizTimer--;
                 timerElement.textContent = gameState.quizTimer + 's';
                 
                 if (gameState.quizTimer <= 0) {
-                    clearInterval(timer);
+                    clearInterval(window.quizTimerInterval);
                     // Time's up - wrong answer penalty
                     answerQuiz(-1, null);
                 }
@@ -1138,6 +1213,11 @@
             setTimeout(() => {
                 document.getElementById('quizModal').style.display = 'none';
                 gameState.quizActive = false;
+                
+                // Remove blur effect and re-enable controls
+                document.querySelector('.game-container').classList.remove('modal-active');
+                canvas.classList.remove('disabled');
+                
                 createNewBlock();
             }, 3000);
         }
@@ -1215,7 +1295,7 @@
             draw();
             
             // Use requestAnimationFrame for smooth 60fps
-            if (!gameState.isGameOver) {
+            if (!gameState.isGameOver || gameState.quizActive || gameState.continueActive) {
                 requestAnimationFrame(gameLoop);
             }
         }
