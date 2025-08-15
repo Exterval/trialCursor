@@ -437,13 +437,19 @@
         }
 
         /* Blur background when modal is active */
-        .game-container.modal-active {
+        .game-container.modal-active .game-canvas,
+        .game-container.modal-active .ui,
+        .game-container.modal-active .instructions,
+        .game-container.modal-active .cat-mascot,
+        .game-container.modal-active .cat-speech,
+        .game-container.modal-active .weather-effect {
             filter: blur(5px);
             pointer-events: none;
         }
 
         .game-container.modal-active .quiz-modal,
-        .game-container.modal-active .continue-modal {
+        .game-container.modal-active .continue-modal,
+        .game-container.modal-active .game-over {
             filter: none;
             pointer-events: auto;
         }
