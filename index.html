@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Layer Tower Stack</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .background-stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
+        }
+
+        .game-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .game-canvas {
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            background: linear-gradient(180deg, #FF6B9D 0%, #C44569 25%, #F8B500 50%, #4ECDC4 75%, #45B7D1 100%);
+            background-size: 100% 400%;
+            animation: backgroundFlow 8s ease-in-out infinite;
+            transition: transform 0.1s ease-out;
+            cursor: pointer;
+        }
+
+        @keyframes backgroundFlow {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 0% 100%; }
+        }
+
+        .ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .score {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .protocol-info {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 20;
+        }
+
+        .restart-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .restart-btn:hover {
+            background: #45a049;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .weather-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .rain {
+            background: linear-gradient(transparent, rgba(100, 150, 200, 0.3));
+            animation: rain 0.5s linear infinite;
+        }
+
+        @keyframes rain {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.3; }
+        }
+
+        .wind {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: wind 2s ease-in-out infinite;
+        }
+
+        @keyframes wind {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .quiz-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            z-index: 25;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 350px;
+            backdrop-filter: blur(10px);
+        }
+
+        .quiz-question {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .quiz-option.correct {
+            background: #4CAF50;
+            border-color: #45a049;
+        }
+
+        .quiz-option.incorrect {
+            background: #f44336;
+            border-color: #d32f2f;
+        }
+
+        .quiz-timer {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .quiz-feedback {
+            font-size: 16px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .cat-mascot {
+            position: absolute;
+            bottom: 80px;
+            right: -60px;
+            font-size: 50px;
+            animation: catBounce 3s ease-in-out infinite;
+            cursor: pointer;
+            transition: transform 0.3s;
+            z-index: 15;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .cat-mascot:hover {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        @keyframes catBounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .cat-speech {
+            position: absolute;
+            bottom: 140px;
+            right: -40px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #333;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 16;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .cat-speech::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid rgba(255, 255, 255, 0.95);
+        }
+
+        .cat-speech.show {
+            opacity: 1;
+            transform: translateY(0px);
+        }
+
+        .continue-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 50%, #764ba2 100%);
+            color: white;
+            padding: 35px;
+            border-radius: 25px;
+            text-align: center;
+            display: none;
+            z-index: 30;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            max-width: 380px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .continue-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .continue-subtitle {
+            font-size: 16px;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        .continue-question {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .continue-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .continue-option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 25px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .continue-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .continue-option.correct {
+            background: #4CAF50;
+            border-color: #45a049;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .continue-option.incorrect {
+            background: #f44336;
+            border-color: #d32f2f;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .continue-timer {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .continue-feedback {
+            font-size: 17px;
+            margin: 20px 0;
+            font-weight: bold;
+            min-height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-stars" id="backgroundStars"></div>
+    <div class="floating-shapes" id="floatingShapes"></div>
+    
+    <div class="game-container">
+        <div class="ui">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="protocol-info" id="protocol">HTTP Layer</div>
+        </div>
+        
+        <canvas id="gameCanvas" class="game-canvas" width="400" height="600"></canvas>
+        
+        <div class="weather-effect" id="weatherEffect"></div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>Tower Collapsed!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p id="protocolMessage">Network connection lost!</p>
+            <button class="restart-btn" onclick="restartGame()">Build New Tower</button>
+        </div>
+        
+        <div class="instructions">
+            Tap or click to drop blocks and stack your Application Layer tower!
+        </div>
+
+        <div class="cat-mascot" id="catMascot">🐱</div>
+        <div class="cat-speech" id="catSpeech">Meow! Let's build!</div>
+
+        <div class="continue-modal" id="continueModal">
+            <div class="continue-timer" id="continueTimer">10s</div>
+            <div class="continue-title">🎯 Second Chance!</div>
+            <div class="continue-subtitle">Answer correctly to continue your tower!</div>
+            <div class="continue-question" id="continueQuestion">Loading question...</div>
+            <div class="continue-options" id="continueOptions"></div>
+            <div class="continue-feedback" id="continueFeedback"></div>
+        </div>
+
+        <div class="quiz-modal" id="quizModal">
+            <div class="quiz-timer" id="quizTimer">10s</div>
+            <div class="quiz-question" id="quizQuestion">Loading question...</div>
+            <div class="quiz-options" id="quizOptions"></div>
+            <div class="quiz-feedback" id="quizFeedback"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const protocolElement = document.getElementById('protocol');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const protocolMessageElement = document.getElementById('protocolMessage');
+        const weatherEffect = document.getElementById('weatherEffect');
+
+        let gameState = {
+            isGameOver: false,
+            score: 0,
+            blocks: [],
+            currentBlock: null,
+            speed: 2,
+            blockHeight: 30,
+            baseWidth: 100,
+            environmentalEffects: false,
+            weatherActive: false,
+            quizActive: false,
+            quizTimer: 10,
+            lastQuizLevel: 0,
+            nextQuizTrigger: 3 + Math.floor(Math.random() * 4), // Random between 3-6
+            fallingPieces: [], // For animation of falling block pieces
+            continueActive: false,
+            continueTimer: 10
+        };
+
+        const protocols = [
+            { name: 'HTTP', color: '#FF6B6B', message: 'Hypertext Transfer Protocol established!' },
+            { name: 'HTTPS', color: '#4ECDC4', message: 'Secure connection activated!' },
+            { name: 'FTP', color: '#45B7D1', message: 'File Transfer Protocol online!' },
+            { name: 'SMTP', color: '#96CEB4', message: 'Simple Mail Transfer active!' },
+            { name: 'DNS', color: '#FFEAA7', message: 'Domain Name System resolved!' },
+            { name: 'DHCP', color: '#DDA0DD', message: 'Dynamic Host Configuration!' },
+            { name: 'SSH', color: '#98D8C8', message: 'Secure Shell connection!' },
+            { name: 'TELNET', color: '#F7DC6F', message: 'Terminal Network Protocol!' }
+        ];
+
+        const quizQuestions = [
+            {
+                question: "What does HTTP stand for?",
+                options: ["HyperText Transfer Protocol", "High Transfer Text Protocol", "Home Transfer Text Protocol", "Host Text Transfer Protocol"],
+                correct: 0,
+                explanation: "HTTP stands for HyperText Transfer Protocol - used for web browsing!"
+            },
+            {
+                question: "Which protocol is used for secure web browsing?",
+                options: ["HTTP", "HTTPS", "FTP", "SMTP"],
+                correct: 1,
+                explanation: "HTTPS adds SSL/TLS encryption to HTTP for secure connections!"
+            },
+            {
+                question: "What is FTP primarily used for?",
+                options: ["Sending emails", "File transfers", "Web browsing", "Domain resolution"],
+                correct: 1,
+                explanation: "FTP (File Transfer Protocol) is designed for transferring files between computers!"
+            },
+            {
+                question: "Which protocol translates domain names to IP addresses?",
+                options: ["DHCP", "SMTP", "DNS", "SSH"],
+                correct: 2,
+                explanation: "DNS (Domain Name System) converts human-readable domain names to IP addresses!"
+            },
+            {
+                question: "What does SMTP handle?",
+                options: ["File downloads", "Email sending", "Web pages", "Remote access"],
+                correct: 1,
+                explanation: "SMTP (Simple Mail Transfer Protocol) is responsible for sending emails!"
+            },
+            {
+                question: "Which protocol provides secure remote access?",
+                options: ["TELNET", "SSH", "HTTP", "FTP"],
+                correct: 1,
+                explanation: "SSH (Secure Shell) provides encrypted remote access, unlike TELNET which is unencrypted!"
+            }
+        ];
+
+        const catMessages = [
+            "Purr-fect stack!", 
+            "You're paw-some!", 
+            "Meow-nificent!", 
+            "Cat-ch that block!", 
+            "Fur-tastic job!",
+            "Paw-sitive vibes!",
+            "You're the cat's pajamas!",
+            "Claw-some skills!"
+        ];
+
+        class Block {
+            constructor(x, y, width, height, color, protocol) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.protocol = protocol;
+                this.moving = true;
+                this.direction = 1;
+                this.settled = false;
+            }
+
+            update() {
+                if (this.moving) {
+                    this.x += gameState.speed * this.direction;
+                    
+                    // Add wind effect
+                    if (gameState.weatherActive && gameState.environmentalEffects) {
+                        this.x += Math.sin(Date.now() * 0.01) * 0.5;
+                    }
+                    
+                    // Ensure block stays within canvas boundaries
+                    if (this.x <= 0) {
+                        this.x = 0;
+                        this.direction = 1;
+                    } else if (this.x + this.width >= canvas.width) {
+                        this.x = canvas.width - this.width;
+                        this.direction = -1;
+                    }
+                }
+            }
+
+            draw() {
+                // Block shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(this.x + 3, this.y + 3, this.width, this.height);
+                
+                // Main block
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Block border
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+                
+                // Protocol label
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.protocol.name, this.x + this.width/2, this.y + this.height/2 + 4);
+            }
+
+            stop() {
+                this.moving = false;
+                this.settled = true;
+            }
+        }
+
+        class FallingPiece {
+            constructor(x, y, width, height, color, protocol) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.protocol = protocol;
+                this.velocityY = 0;
+                this.velocityX = (Math.random() - 0.5) * 4; // Random horizontal drift
+                this.rotation = 0;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+                this.gravity = 0.5;
+                this.opacity = 1;
+            }
+
+            update() {
+                this.velocityY += this.gravity;
+                this.y += this.velocityY;
+                this.x += this.velocityX;
+                this.rotation += this.rotationSpeed;
+                
+                // Fade out as it falls
+                if (this.y > canvas.height - 100) {
+                    this.opacity -= 0.02;
+                }
+                
+                return this.y < canvas.height + 50 && this.opacity > 0;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                ctx.rotate(this.rotation);
+                
+                // Falling piece shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(-this.width/2 + 2, -this.height/2 + 2, this.width, this.height);
+                
+                // Main falling piece
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                
+                // Border
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+                
+                ctx.restore();
+            }
+        }
+
+        function initGame() {
+            gameState.isGameOver = false;
+            gameState.score = 0;
+            gameState.blocks = [];
+            gameState.environmentalEffects = false;
+            gameState.weatherActive = false;
+            gameState.speed = 2;
+            gameState.quizActive = false;
+            gameState.lastQuizLevel = 0;
+            gameState.nextQuizTrigger = 3 + Math.floor(Math.random() * 4);
+            gameState.fallingPieces = [];
+            gameState.continueActive = false;
+            gameState.continueTimer = 10;
+            
+            createBackgroundElements();
+            showCatMessage("Meow! Let's build!");
+            
+            // Create base block with better positioning
+            const baseProtocol = protocols[0];
+            const baseX = Math.max(0, (canvas.width - gameState.baseWidth) / 2);
+            const baseBlock = new Block(
+                baseX,
+                canvas.height - gameState.blockHeight - 10,
+                gameState.baseWidth,
+                gameState.blockHeight,
+                baseProtocol.color,
+                baseProtocol
+            );
+            baseBlock.stop();
+            gameState.blocks.push(baseBlock);
+            
+            createNewBlock();
+            updateScore();
+            updateProtocol();
+        }
+
+        function createBackgroundElements() {
+            // Create stars
+            const starsContainer = document.getElementById('backgroundStars');
+            starsContainer.innerHTML = '';
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = (Math.random() * 3 + 1) + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+
+            // Create floating shapes
+            const shapesContainer = document.getElementById('floatingShapes');
+            shapesContainer.innerHTML = '';
+            for (let i = 0; i < 8; i++) {
+                const shape = document.createElement('div');
+                shape.className = 'shape';
+                shape.style.left = Math.random() * 100 + '%';
+                shape.style.width = (Math.random() * 30 + 10) + 'px';
+                shape.style.height = shape.style.width;
+                shape.style.backgroundColor = `hsla(${Math.random() * 360}, 70%, 80%, 0.1)`;
+                shape.style.animationDuration = (Math.random() * 20 + 15) + 's';
+                shape.style.animationDelay = Math.random() * 10 + 's';
+                shapesContainer.appendChild(shape);
+            }
+        }
+
+        function removeTopBlock() {
+            if (gameState.blocks.length <= 1) return; // Don't remove the base block
+            
+            const topBlock = gameState.blocks.pop();
+            
+            // Create falling animation pieces from the removed block
+            const pieceWidth = topBlock.width / 3;
+            for (let i = 0; i < 3; i++) {
+                const piece = new FallingPiece(
+                    topBlock.x + (i * pieceWidth),
+                    topBlock.y,
+                    pieceWidth,
+                    topBlock.height,
+                    topBlock.color,
+                    topBlock.protocol
+                );
+                gameState.fallingPieces.push(piece);
+            }
+            
+            // Update protocol display to reflect new top block
+            updateProtocol();
+        }
+
+        function showCatMessage(message) {
+            const catSpeech = document.getElementById('catSpeech');
+            catSpeech.textContent = message;
+            catSpeech.classList.add('show');
+            
+            setTimeout(() => {
+                catSpeech.classList.remove('show');
+            }, 2500);
+        }
+
+        function createNewBlock() {
+            if (gameState.isGameOver) return;
+            
+            const protocol = protocols[gameState.blocks.length % protocols.length];
+            const lastBlock = gameState.blocks[gameState.blocks.length - 1];
+            const newY = lastBlock.y - gameState.blockHeight;
+            
+            // Ensure the new block starts in a visible position
+            const startX = Math.max(0, Math.min(canvas.width - lastBlock.width, canvas.width/2 - lastBlock.width/2));
+            
+            gameState.currentBlock = new Block(
+                startX,
+                newY,
+                lastBlock.width,
+                gameState.blockHeight,
+                protocol.color,
+                protocol
+            );
+        }
+
+        function dropBlock() {
+            if (!gameState.currentBlock || gameState.isGameOver || gameState.quizActive) return;
+            
+            const currentBlock = gameState.currentBlock;
+            const lastBlock = gameState.blocks[gameState.blocks.length - 1];
+            
+            // Calculate overlap
+            const leftEdge = Math.max(currentBlock.x, lastBlock.x);
+            const rightEdge = Math.min(currentBlock.x + currentBlock.width, lastBlock.x + lastBlock.width);
+            const overlap = rightEdge - leftEdge;
+            
+            if (overlap <= 0) {
+                // Game over - no overlap
+                gameOver();
+                return;
+            }
+            
+            // Adjust block to overlapping area
+            currentBlock.x = leftEdge;
+            currentBlock.width = overlap;
+            currentBlock.stop();
+            
+            // Ensure block is visible on screen
+            if (currentBlock.x < 0) {
+                currentBlock.x = 0;
+            }
+            if (currentBlock.x + currentBlock.width > canvas.width) {
+                currentBlock.x = canvas.width - currentBlock.width;
+            }
+            
+            gameState.blocks.push(currentBlock);
+            gameState.currentBlock = null;
+            
+            // Update game state
+            gameState.score += Math.floor(overlap);
+            updateScore();
+            updateProtocol();
+            
+            // Increase difficulty more gradually
+            if (gameState.blocks.length > 3) {
+                gameState.speed += 0.05; // Reduced from 0.1
+            }
+            
+            // Activate environmental effects at score 100+
+            if (gameState.score >= 100 && !gameState.environmentalEffects) {
+                gameState.environmentalEffects = true;
+                activateWeatherEffect();
+            }
+            
+            // Check if tower is getting too high - adjust threshold
+            if (currentBlock.y <= 100) { // Increased from 50
+                // You win condition - very tall tower!
+                showWinMessage();
+                return;
+            }
+            
+            // Check for quiz trigger (randomized interval)
+            if (gameState.blocks.length >= gameState.nextQuizTrigger) {
+                setTimeout(() => startQuiz(), 500);
+                return;
+            }
+
+            // Show encouraging cat message every few blocks
+            if (gameState.blocks.length % 3 === 0 && gameState.blocks.length > 3) {
+                const randomMessage = catMessages[Math.floor(Math.random() * catMessages.length)];
+                showCatMessage(randomMessage);
+            }
+            
+            setTimeout(() => createNewBlock(), 200);
+        }
+
+        function activateWeatherEffect() {
+            const effects = ['rain', 'wind'];
+            const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+            
+            weatherEffect.className = `weather-effect ${randomEffect}`;
+            gameState.weatherActive = true;
+            
+            // Random duration for weather effects
+            setTimeout(() => {
+                weatherEffect.className = 'weather-effect';
+                gameState.weatherActive = false;
+                
+                // Chance for another weather event
+                if (Math.random() < 0.3) {
+                    setTimeout(activateWeatherEffect, 2000 + Math.random() * 3000);
+                }
+            }, 3000 + Math.random() * 4000);
+        }
+
+        function updateScore() {
+            scoreElement.textContent = gameState.score;
+        }
+
+        function updateProtocol() {
+            const currentProtocol = protocols[(gameState.blocks.length - 1) % protocols.length];
+            protocolElement.textContent = `${currentProtocol.name} Layer`;
+        }
+
+        function gameOver() {
+            gameState.isGameOver = true;
+            showCatMessage("Don't give up! 🙀");
+            
+            // Show continue chance instead of immediate game over
+            startContinueChance();
+        }
+
+        function finalGameOver() {
+            finalScoreElement.textContent = gameState.score;
+            
+            const messages = [
+                "Network stack collapsed!",
+                "Connection timeout!",
+                "Protocol error detected!",
+                "Application layer failed!",
+                "Server connection lost!"
+            ];
+            
+            protocolMessageElement.textContent = messages[Math.floor(Math.random() * messages.length)];
+            gameOverElement.style.display = 'block';
+        }
+
+        function startContinueChance() {
+            if (gameState.continueActive) return;
+            
+            gameState.continueActive = true;
+            gameState.continueTimer = 10;
+            
+            const randomQuestion = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+            
+            document.getElementById('continueQuestion').textContent = randomQuestion.question;
+            document.getElementById('continueFeedback').textContent = '';
+            
+            const optionsContainer = document.getElementById('continueOptions');
+            optionsContainer.innerHTML = '';
+            
+            randomQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'continue-option';
+                button.textContent = option;
+                button.onclick = () => answerContinue(index, randomQuestion);
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('continueModal').style.display = 'block';
+            startContinueTimer();
+        }
+
+        function startContinueTimer() {
+            const timerElement = document.getElementById('continueTimer');
+            const timer = setInterval(() => {
+                gameState.continueTimer--;
+                timerElement.textContent = gameState.continueTimer + 's';
+                
+                if (gameState.continueTimer <= 0) {
+                    clearInterval(timer);
+                    // Time's up - final game over
+                    answerContinue(-1, null);
+                }
+            }, 1000);
+        }
+
+        function answerContinue(selectedIndex, question) {
+            if (!gameState.continueActive) return;
+            
+            const options = document.querySelectorAll('.continue-option');
+            const feedbackElement = document.getElementById('continueFeedback');
+            
+            if (selectedIndex === question.correct) {
+                // Correct answer - player gets to continue!
+                options[selectedIndex].classList.add('correct');
+                feedbackElement.textContent = "Amazing! You can continue! " + question.explanation;
+                feedbackElement.style.color = '#4CAF50';
+                
+                showCatMessage("Saved by knowledge! 😸");
+                
+                // Reset game state but keep some progress
+                gameState.isGameOver = false;
+                gameState.continueActive = false;
+                
+                // Give player a small base to continue from
+                gameState.blocks = [];
+                const baseProtocol = protocols[0];
+                const continueBlock = new Block(
+                    canvas.width/2 - (gameState.baseWidth * 0.8)/2,
+                    canvas.height - gameState.blockHeight - 10,
+                    gameState.baseWidth * 0.8, // Slightly smaller restart
+                    gameState.blockHeight,
+                    baseProtocol.color,
+                    baseProtocol
+                );
+                continueBlock.stop();
+                gameState.blocks.push(continueBlock);
+                
+                // Reset speed but keep it slightly challenging
+                gameState.speed = Math.max(2, gameState.speed * 0.8);
+                
+                setTimeout(() => {
+                    document.getElementById('continueModal').style.display = 'none';
+                    createNewBlock();
+                    updateProtocol();
+                }, 2000);
+                
+            } else {
+                // Wrong answer or timeout - final game over
+                if (selectedIndex >= 0) {
+                    options[selectedIndex].classList.add('incorrect');
+                }
+                if (question) {
+                    options[question.correct].classList.add('correct');
+                }
+                
+                if (selectedIndex === -1) {
+                    feedbackElement.textContent = "Time's up! Game Over!";
+                } else {
+                    feedbackElement.textContent = "Wrong answer! Game Over!";
+                }
+                feedbackElement.style.color = '#f44336';
+                
+                showCatMessage("Better luck next time! 😿");
+                
+                setTimeout(() => {
+                    document.getElementById('continueModal').style.display = 'none';
+                    finalGameOver();
+                }, 2000);
+            }
+        }
+
+        function showWinMessage() {
+            gameState.isGameOver = true;
+            finalScoreElement.textContent = gameState.score;
+            protocolMessageElement.textContent = "Perfect Application Layer Stack! 🎉";
+            gameOverElement.style.display = 'block';
+        }
+
+        function restartGame() {
+            gameOverElement.style.display = 'none';
+            weatherEffect.className = 'weather-effect';
+            document.getElementById('quizModal').style.display = 'none';
+            initGame();
+        }
+
+        function startQuiz() {
+            if (gameState.quizActive) return;
+            
+            gameState.quizActive = true;
+            gameState.lastQuizLevel = gameState.blocks.length;
+            gameState.nextQuizTrigger = gameState.blocks.length + 3 + Math.floor(Math.random() * 4); // Next quiz in 3-6 blocks
+            gameState.quizTimer = 10;
+            
+            showCatMessage("Quiz time! 🤔");
+            
+            const randomQuestion = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+            
+            document.getElementById('quizQuestion').textContent = randomQuestion.question;
+            document.getElementById('quizFeedback').textContent = '';
+            
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+            
+            randomQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'quiz-option';
+                button.textContent = option;
+                button.onclick = () => answerQuiz(index, randomQuestion);
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('quizModal').style.display = 'block';
+            startQuizTimer();
+        }
+
+        function startQuizTimer() {
+            const timerElement = document.getElementById('quizTimer');
+            const timer = setInterval(() => {
+                gameState.quizTimer--;
+                timerElement.textContent = gameState.quizTimer + 's';
+                
+                if (gameState.quizTimer <= 0) {
+                    clearInterval(timer);
+                    // Time's up - wrong answer penalty
+                    answerQuiz(-1, null);
+                }
+            }, 1000);
+        }
+
+        function answerQuiz(selectedIndex, question) {
+            if (!gameState.quizActive) return;
+            
+            const options = document.querySelectorAll('.quiz-option');
+            const feedbackElement = document.getElementById('quizFeedback');
+            
+            if (selectedIndex === question.correct) {
+                // Correct answer
+                options[selectedIndex].classList.add('correct');
+                feedbackElement.textContent = "Correct! " + question.explanation;
+                feedbackElement.style.color = '#4CAF50';
+                
+                showCatMessage("Paw-some! 😸");
+                
+                // Reward: bonus points and restore some block width
+                gameState.score += 20;
+                if (gameState.currentBlock) {
+                    gameState.currentBlock.width = Math.min(gameState.currentBlock.width + 10, gameState.baseWidth);
+                }
+                updateScore();
+                
+            } else {
+                // Wrong answer or timeout
+                if (selectedIndex >= 0) {
+                    options[selectedIndex].classList.add('incorrect');
+                }
+                options[question.correct].classList.add('correct');
+                
+                showCatMessage("Oops! Block removed! 😿");
+                
+                if (selectedIndex === -1) {
+                    feedbackElement.textContent = "Time's up! " + question.explanation;
+                } else {
+                    feedbackElement.textContent = "Wrong! " + question.explanation;
+                }
+                feedbackElement.style.color = '#f44336';
+                
+                // Penalty: remove top block, increase speed, and trigger weather
+                removeTopBlock();
+                gameState.speed += 0.5;
+                activateWeatherEffect();
+            }
+            
+            // Close quiz after showing feedback
+            setTimeout(() => {
+                document.getElementById('quizModal').style.display = 'none';
+                gameState.quizActive = false;
+                createNewBlock();
+            }, 3000);
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#98FB98');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw all settled blocks
+            gameState.blocks.forEach(block => {
+                block.draw();
+            });
+            
+            // Draw current moving block
+            if (gameState.currentBlock) {
+                gameState.currentBlock.update();
+                gameState.currentBlock.draw();
+                
+                // Draw drop indicator
+                drawDropIndicator();
+            }
+            
+            // Update and draw falling pieces
+            gameState.fallingPieces = gameState.fallingPieces.filter(piece => {
+                const stillVisible = piece.update();
+                if (stillVisible) {
+                    piece.draw();
+                }
+                return stillVisible;
+            });
+            
+            // Add screen shake effect during weather
+            if (gameState.weatherActive && Math.random() < 0.1) {
+                ctx.save();
+                ctx.translate(Math.random() * 4 - 2, Math.random() * 4 - 2);
+                ctx.restore();
+            }
+        }
+        
+        function drawDropIndicator() {
+            if (!gameState.currentBlock) return;
+            
+            const currentBlock = gameState.currentBlock;
+            const lastBlock = gameState.blocks[gameState.blocks.length - 1];
+            
+            // Draw a subtle indicator line where the block will land
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, lastBlock.y);
+            ctx.lineTo(canvas.width, lastBlock.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw overlap preview
+            const leftEdge = Math.max(currentBlock.x, lastBlock.x);
+            const rightEdge = Math.min(currentBlock.x + currentBlock.width, lastBlock.x + lastBlock.width);
+            const overlap = rightEdge - leftEdge;
+            
+            if (overlap > 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(leftEdge, lastBlock.y, overlap, gameState.blockHeight);
+            }
+        }
+
+        function gameLoop() {
+            draw();
+            
+            // Use requestAnimationFrame for smooth 60fps
+            if (!gameState.isGameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Event listeners
+        canvas.addEventListener('click', dropBlock);
+        
+        // Touch support for mobile devices
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            dropBlock();
+        });
+        
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                dropBlock();
+            }
+        });
+        
+        // Add visual feedback for controls
+        canvas.addEventListener('mousedown', () => {
+            canvas.style.transform = 'scale(0.98)';
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            canvas.style.transform = 'scale(1)';
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            canvas.style.transform = 'scale(1)';
+        });
+
+        // Cat mascot interaction
+        document.getElementById('catMascot').addEventListener('click', () => {
+            const randomMessage = catMessages[Math.floor(Math.random() * catMessages.length)];
+            showCatMessage(randomMessage);
+        });
+
+        // Start game
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>
